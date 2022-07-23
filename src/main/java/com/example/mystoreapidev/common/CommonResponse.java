@@ -1,5 +1,6 @@
 package com.example.mystoreapidev.common;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 
@@ -16,6 +17,11 @@ public class CommonResponse<T> {
         this.code = code;
         this.message = message;
         this.data = data;
+    }
+
+    @JsonIgnore
+    public boolean isSuccess(){
+        return this.code == ResponseCode.SUCCESS.getCode();
     }
 
     public static <T> CommonResponse<T> createForSuccess(){
