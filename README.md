@@ -1,4 +1,4 @@
-#MyStore Api
+# MyStore API
 
 [![OSCS Status](https://www.oscs1024.com/platform/badge/LeanneTN/mystore-api-dev.svg?size=small)](https://www.oscs1024.com/project/LeanneTN/mystore-api-dev?ref=badge_small)
 
