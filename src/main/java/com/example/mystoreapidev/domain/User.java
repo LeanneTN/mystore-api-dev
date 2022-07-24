@@ -1,7 +1,10 @@
 package com.example.mystoreapidev.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import javafx.util.converter.LocalDateStringConverter;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 @TableName("mystore_user")
@@ -16,4 +19,9 @@ public class User {
     private String answer;
 
     private Integer role;
+
+    //localDateTime fixes original questions from Date
+    //most extinguish shortcoming of Date is threads of Date is less secure
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

@@ -7,10 +7,7 @@ import com.example.mystoreapidev.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.constraints.NotBlank;
@@ -34,4 +31,25 @@ public class UserController {
         return result;
     }
 
+    //field check
+    @PostMapping("check_field")
+    public CommonResponse<Object> checkField(
+            @RequestParam @NotBlank(message = "field name can't be empty") String fieldName,
+            @RequestParam @NotBlank(message = "field value can't be empty") String fieldValue){
+        return userService.checkField(fieldName, fieldValue);
+    }
+
+    /*
+    1. spring mvc uses request body to get parameters
+    2. request body will complete parameter validation with @Valid
+    3. MD5-> when using third party components, it has three ways:
+        a. accomplished by hand(not suggested)
+        b. use component in spring way
+        c. use component in SpringBoot way(use @XXXX)
+     */
+    @PostMapping("register")
+    public CommonResponse<Object> register(
+            @RequestBody User user){
+        return null;
+    }
 }
