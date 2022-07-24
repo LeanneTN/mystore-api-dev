@@ -26,6 +26,8 @@ public class UserServiceImpl implements UserService {
         if(loginUser==null){
             return CommonResponse.createForError("wrong username or password");
         }
+        // block password in response body
+        loginUser.setPassword(null);
         return CommonResponse.createForSuccess(loginUser);
     }
 }

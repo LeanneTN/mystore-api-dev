@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.validation.ConstraintViolationException;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,5 +20,16 @@ public class GlobalExceptionHandler {
     @ResponseStatus(code= HttpStatus.BAD_REQUEST)
     public CommonResponse<Object> handlerMissingParameterException(){
         return CommonResponse.createForError(ResponseCode.ARGUMENT_ILLEGAL.getCode(), ResponseCode.ARGUMENT_ILLEGAL.getDescription());
+    }
+
+    //validation of non-object parameters
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseBody
+    @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
+    public CommonResponse<Object> handleValidationException(ConstraintViolationException exception){
+        String message = exception.getMessage();
+        String[] messages = new String[2];
+        messages = message.split(":");
+        return CommonResponse.createForError(messages[1]);
     }
 }
