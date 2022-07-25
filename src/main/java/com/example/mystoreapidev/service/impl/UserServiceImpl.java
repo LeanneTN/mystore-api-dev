@@ -10,6 +10,7 @@ import com.example.mystoreapidev.domain.User;
 import com.example.mystoreapidev.persistence.UserMapper;
 import com.example.mystoreapidev.service.UserService;
 import com.github.benmanes.caffeine.cache.Cache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,8 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import javax.annotation.Resource;
 import java.nio.file.Watchable;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service("userService") //name inside bracket make it faster when create an object names userService
+@Slf4j //inject log into class
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -105,5 +108,57 @@ public class UserServiceImpl implements UserService {
             return CommonResponse.createForError("register failed");
         }
         return CommonResponse.createForSuccess();
+    }
+
+    @Override
+    public CommonResponse<String> getForgetQuestion(String username) {
+        CommonResponse<Object> checkResult = checkField("username", username);
+        if(checkResult.isSuccess()){
+            return CommonResponse.createForError("username is not exists");
+        }
+
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("username", username);
+        String question = userMapper.selectOne(Wrappers.<User>query().eq("username", username)).getQuestion();
+        if(StringUtils.isNotBlank(question)){
+            return CommonResponse.createForSuccess(question);
+        }
+        return CommonResponse.createForError("question not be set");
+    }
+
+    @Override
+    public CommonResponse<String> checkForgetQuestion(String username, String question, String answer) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", username).eq("question", question).eq("answer", answer);
+        long rows = userMapper.selectCount(queryWrapper);
+        if(rows>0){
+            //use UUID to generate token string
+            String forgetToken = UUID.randomUUID().toString();
+            //put token into local cache, use username as key and token as value. set token available in 5 min
+            localCache.put(username, forgetToken);
+            log.info("Put into LocalCache: ({}, {}), {}", username, forgetToken, LocalDateTime.now());
+            return CommonResponse.createForSuccess(forgetToken);
+        }
+        return CommonResponse.createForError("wrong answer");
+    }
+
+    @Override
+    public CommonResponse<Object> resetForgetPassword(String username, String newPassword, String forgetToken) {
+        return null;
+    }
+
+    @Override
+    public CommonResponse<User> getUserDetail(Integer userId) {
+        return null;
+    }
+
+    @Override
+    public CommonResponse<Object> resetPassword(String oldPassword, String newPassword, User user) {
+        return null;
+    }
+
+    @Override
+    public CommonResponse<Object> updateUserInfo(User user) {
+        return null;
     }
 }

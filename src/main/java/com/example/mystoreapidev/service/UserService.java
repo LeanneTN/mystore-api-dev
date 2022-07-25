@@ -9,4 +9,16 @@ public interface UserService {
     CommonResponse<Object> checkField(String fieldName, String fieldValue);
 
     CommonResponse<Object> register(User user);
+
+    CommonResponse<String> getForgetQuestion(String username);
+
+    CommonResponse<String> checkForgetQuestion(String username, String question, String answer);
+
+    CommonResponse<Object> resetForgetPassword(String username, String newPassword, String forgetToken);
+
+    CommonResponse<User> getUserDetail(Integer userId);
+
+    CommonResponse<Object> resetPassword(String oldPassword, String newPassword, User user);
+
+    CommonResponse<Object> updateUserInfo(User user);
 }
