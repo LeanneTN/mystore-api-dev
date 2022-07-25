@@ -50,6 +50,6 @@ public class UserController {
     @PostMapping("register")
     public CommonResponse<Object> register(
             @RequestBody User user){
-        return null;
+        return userService.register(user);
     }
 }
