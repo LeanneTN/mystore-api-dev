@@ -2,7 +2,8 @@ package com.example.mystoreapidev.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.example.mystoreapidev.common.CONSTANT;
 import com.example.mystoreapidev.common.CommonResponse;
@@ -144,12 +145,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CommonResponse<Object> resetForgetPassword(String username, String newPassword, String forgetToken) {
-        return null;
+        CommonResponse<Object> checkResult = checkField("username", username);
+        if(checkResult.isSuccess()){
+            return CommonResponse.createForError("username is not exists");
+        }
+        // get token from local cache
+        String token = localCache.getIfPresent(username);
+        log.info("Get token from LocalCache : ({}, {})", username, token);
+        if(StringUtils.isBlank(token)){
+            return CommonResponse.createForError("token is not available or out of date");
+        }
+        if(StringUtils.equals(token, forgetToken)){
+            String md5Password = bCryptPasswordEncoder.encode(newPassword);
+
+            User user = new User();
+            user.setPassword(md5Password);
+            user.setUsername(username);
+
+            UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("username", username);
+            updateWrapper.set("password", md5Password);
+            int rows = userMapper.update(user, updateWrapper);
+
+            if(rows > 0){
+                return CommonResponse.createForSuccess();
+            }
+
+            return CommonResponse.createForError("failed to reset password by answer question, try later");
+        }
+        else{
+            return CommonResponse.createForError("wrong token, please get token again later");
+        }
     }
 
     @Override
     public CommonResponse<User> getUserDetail(Integer userId) {
-        return null;
+        User user = userMapper.selectById(userId);
+        if(user == null){
+            return CommonResponse.createForError("user information can't find");
+        }
+        user.setPassword(StringUtils.EMPTY);
     }
 
     @Override
