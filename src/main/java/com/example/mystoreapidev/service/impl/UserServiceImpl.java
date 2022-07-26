@@ -12,6 +12,7 @@ import com.example.mystoreapidev.persistence.UserMapper;
 import com.example.mystoreapidev.service.UserService;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -185,15 +186,52 @@ public class UserServiceImpl implements UserService {
             return CommonResponse.createForError("user information can't find");
         }
         user.setPassword(StringUtils.EMPTY);
+        return CommonResponse.createForSuccess(user);
     }
 
     @Override
     public CommonResponse<Object> resetPassword(String oldPassword, String newPassword, User user) {
-        return null;
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id", user.getId());
+        queryWrapper.eq("password", bCryptPasswordEncoder.encode(oldPassword));
+        long rows = userMapper.selectCount(queryWrapper);
+        if(rows==0){
+            return CommonResponse.createForError("wrong old password");
+        }
+        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", user.getId());
+
+        rows = userMapper.update(user, updateWrapper);
+
+        if(rows > 0){
+            return CommonResponse.createForSuccess();
+        }
+        return CommonResponse.createForError("reset password failed");
     }
 
     @Override
     public CommonResponse<Object> updateUserInfo(User user) {
-        return null;
+        CommonResponse<Object> checkResult = checkField("email", user.getEmail());
+        if(!checkResult.isSuccess())
+            return checkResult;
+        checkResult = checkField("phone", user.getPhone());
+        if(!checkResult.isSuccess())
+            return checkResult;
+
+        user.setUpdateTime(LocalDateTime.now());
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", user.getId());
+        updateWrapper.set("email", user.getEmail());
+        updateWrapper.set("phone", user.getPhone());
+        updateWrapper.set("question", user.getQuestion());
+        updateWrapper.set("answer", user.getAnswer());
+        updateWrapper.set("update_time", user.getUpdateTime());
+        long rows = userMapper.update(user, updateWrapper);
+
+        if(rows > 0){
+            return CommonResponse.createForSuccess();
+        }
+        return CommonResponse.createForError("reset user information failed");
     }
 }
