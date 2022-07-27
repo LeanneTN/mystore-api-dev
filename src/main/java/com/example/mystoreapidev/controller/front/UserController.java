@@ -63,7 +63,7 @@ public class UserController {
         return userService.getForgetQuestion(username);
     }
 
-    @PostMapping("check_forget_anwser")
+    @PostMapping("check_forget_answer")
     public CommonResponse<String> checkForgetAnswer(
             @RequestParam @NotBlank(message = "username can't be empty") String username,
             @RequestParam @NotBlank(message = "question can't be empty") String question,

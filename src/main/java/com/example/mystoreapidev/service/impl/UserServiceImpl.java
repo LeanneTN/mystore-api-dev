@@ -38,18 +38,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CommonResponse<User> login(String username, String password) {
-        QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.eq("username", username);
-        queryWrapper.eq("password", password);
-        //todo password needs encryption by md5
-        User loginUser = userMapper.selectOne(queryWrapper);
-
-        if(loginUser==null){
+        User loginUser = userMapper.selectOne(Wrappers.<User>query().eq("username", username));
+        if(loginUser==null)
             return CommonResponse.createForError("wrong username or password");
-        }
-        // block password in response body
-        loginUser.setPassword(null);
-        return CommonResponse.createForSuccess(loginUser);
+        boolean checkPassword = bCryptPasswordEncoder.matches(password, loginUser.getPassword());
+        loginUser.setPassword(StringUtils.EMPTY);
+        return checkPassword?CommonResponse.createForSuccess(loginUser):CommonResponse.createForError("wrong username or password");
     }
 
     @Override
@@ -193,9 +187,10 @@ public class UserServiceImpl implements UserService {
     public CommonResponse<Object> resetPassword(String oldPassword, String newPassword, User user) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", user.getId());
-        queryWrapper.eq("password", bCryptPasswordEncoder.encode(oldPassword));
+        //queryWrapper.eq("password", bCryptPasswordEncoder.encode(oldPassword));
         long rows = userMapper.selectCount(queryWrapper);
-        if(rows==0){
+        User user1 = userMapper.selectOne(queryWrapper);
+        if(!bCryptPasswordEncoder.matches(oldPassword, user1.getPassword())){
             return CommonResponse.createForError("wrong old password");
         }
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
