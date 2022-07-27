@@ -27,5 +27,4 @@ public class CategoryController {
         return categoryService.getCategoryAndAllChildren(categoryId);
     }
 
-
 }
