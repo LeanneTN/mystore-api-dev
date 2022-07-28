@@ -12,5 +12,5 @@ MyStore API is the back-end of the whole project, includes the functions that
 handle the requirement from client-end or management-end that will be 
 developed in the following period.
 
-API documents may be released in the future.
+API documents have been released in WIKI. It was seperated by categories and functions it takes.
 
