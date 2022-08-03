@@ -7,6 +7,9 @@ public class CONSTANT {
 
     public static final Integer CATEGORY_ROOT = 0;
 
+    public static final String PRODUCT_BY_ASC = "price_asc";
+    public static final String PRODUCT_BY_DESC = "price_desc";
+
     public interface ROLE{
         int CUSTOMER = 1;
         int ADMIN = 0;
