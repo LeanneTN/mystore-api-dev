@@ -1,5 +1,7 @@
 package com.example.mystoreapidev.common;
 
+import lombok.Getter;
+
 public class CONSTANT {
     public static final String LOGIN_USER = "loginUser";
 
@@ -8,5 +10,21 @@ public class CONSTANT {
     public interface ROLE{
         int CUSTOMER = 1;
         int ADMIN = 0;
+    }
+
+    @Getter
+    public enum ProductStatus{
+        ON_SALE(1, "on_sale"),
+        TAKE_DOWN(2, "take_down"),
+        DELETE(3, "delete");
+
+
+        private final int code;
+        private final String description;
+
+        ProductStatus(int code, String description){
+            this.code = code;
+            this.description = description;
+        }
     }
 }
