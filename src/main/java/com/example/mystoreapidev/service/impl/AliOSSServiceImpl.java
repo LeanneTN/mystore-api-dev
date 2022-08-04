@@ -26,23 +26,24 @@ public class AliOSSServiceImpl implements OSSService {
     private String ACCESS_ID;
     @Value("${aliyun.oss.accessKey}")
     private String ACCESS_KEY;
-    @Value("${aliyun.oss.endpoint")
+    @Value("${aliyun.oss.endpoint}")
     private String ENDPOINT;
-    @Value("${aliyun.oss.bucket")
+    @Value("${aliyun.oss.bucket}")
     private String BUCKET;
     @Value("${aliyun.oss.dir}")
     private String DIR;
 
     @Value("${aliyun.oss.policy.expire}")
-    private String EXPIRE;
+    private Long EXPIRE;
     @Value("${aliyun.oss.policy.maxSize}")
     private long MAX_SIZE;
 
     @Override
     public CommonResponse<AliOSSPolicy> generatePolicy() {
+        AliOSSPolicy aliOSSPolicy = new AliOSSPolicy();
         String host = "http://"+BUCKET+"."+ENDPOINT;
         try{
-            long expireTime = 30;
+            long expireTime = EXPIRE;
             long expireEndTime = System.currentTimeMillis() + expireTime * 1000;
             Date expiration = new Date(expireEndTime);
             PolicyConditions policyConditions = new PolicyConditions();
@@ -53,9 +54,15 @@ public class AliOSSServiceImpl implements OSSService {
             byte[] binaryData = postPolicy.getBytes(StandardCharsets.UTF_8);
             String encodedPolicy = BinaryUtil.toBase64String(binaryData);
             String postSignature = ossClient.calculatePostSignature(postPolicy);
+
+            aliOSSPolicy.setAccessId(ACCESS_ID);
+            aliOSSPolicy.setPolicy(encodedPolicy);
+            aliOSSPolicy.setSignature(postSignature);
+            aliOSSPolicy.setHost(host);
+            aliOSSPolicy.setDir(DIR);
         }catch (Exception e){
             log.info("server end generate alioss policy failed.",e);
         }
-        return null;
+        return CommonResponse.createForSuccess(aliOSSPolicy);
     }
 }
