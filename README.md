@@ -14,3 +14,19 @@ developed in the following period.
 
 API documents have been released in WIKI. It was seperated by categories and functions it takes.
 
+## Third party services
+- Aliyun OSS
+- Aliyun ECS
+- Caffeine
+- Mybatis Plus
+
+
+## Coding Style
+In this project, my coding style is based on restful API and 
+Spring Boot way to program
+
+Beans need to be autowired are defined in utils packages
+
+Some basic properties are written in application.properties. Most
+properties inside are just examples, which is what I used during 
+development. So most of them are expired or not fit in your computer.
