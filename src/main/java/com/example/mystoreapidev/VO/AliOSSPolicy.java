@@ -9,4 +9,6 @@ public class AliOSSPolicy {
     private String signature;
     private String dir;
     private String host;
+
+    private String callback;
 }

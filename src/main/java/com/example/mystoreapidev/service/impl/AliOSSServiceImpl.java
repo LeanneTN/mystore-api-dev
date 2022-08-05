@@ -4,14 +4,17 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.utils.BinaryUtil;
 import com.aliyun.oss.model.MatchMode;
 import com.aliyun.oss.model.PolicyConditions;
+import com.example.mystoreapidev.VO.AliOSSCallBackResult;
 import com.example.mystoreapidev.VO.AliOSSPolicy;
 import com.example.mystoreapidev.common.CommonResponse;
 import com.example.mystoreapidev.service.OSSService;
 import lombok.extern.slf4j.Slf4j;
+import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -38,6 +41,9 @@ public class AliOSSServiceImpl implements OSSService {
     @Value("${aliyun.oss.policy.maxSize}")
     private long MAX_SIZE;
 
+    @Value("${aliyun.oss.callback}")
+    private String CALLBACK_URL;
+
     @Override
     public CommonResponse<AliOSSPolicy> generatePolicy() {
         AliOSSPolicy aliOSSPolicy = new AliOSSPolicy();
@@ -55,14 +61,33 @@ public class AliOSSServiceImpl implements OSSService {
             String encodedPolicy = BinaryUtil.toBase64String(binaryData);
             String postSignature = ossClient.calculatePostSignature(postPolicy);
 
+            JSONObject jsonCallback = new JSONObject();
+            jsonCallback.put("callbackUrl", CALLBACK_URL);
+            jsonCallback.put("callbackBody",
+                    "filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}");
+            jsonCallback.put("callbackBodyType", "application/x-www-form-urlencoded");
+            String base64CallbackBody = BinaryUtil.toBase64String(jsonCallback.toString().getBytes());
+
             aliOSSPolicy.setAccessId(ACCESS_ID);
             aliOSSPolicy.setPolicy(encodedPolicy);
             aliOSSPolicy.setSignature(postSignature);
             aliOSSPolicy.setHost(host);
             aliOSSPolicy.setDir(DIR);
+            aliOSSPolicy.setCallback(base64CallbackBody);
         }catch (Exception e){
             log.info("server end generate alioss policy failed.",e);
         }
         return CommonResponse.createForSuccess(aliOSSPolicy);
+    }
+
+    @Override
+    public CommonResponse<AliOSSCallBackResult> callback(HttpServletRequest request){
+        AliOSSCallBackResult result = new AliOSSCallBackResult();
+        result.setFilename(request.getParameter("filename"));
+        result.setSize(request.getParameter("size"));
+        result.setMimeType(request.getParameter("mimeType"));
+        result.setHeight(request.getParameter("height"));
+        result.setWidth(request.getParameter("width"));
+        return CommonResponse.createForSuccess(result);
     }
 }
