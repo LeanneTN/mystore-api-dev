@@ -19,6 +19,6 @@ public class CartItemVO {
     private String productMainImage;
 
     private BigDecimal cartItemTotalPrice;
-
+    //quantity is being processed by back-end or not
     private Boolean checkStock;
 }

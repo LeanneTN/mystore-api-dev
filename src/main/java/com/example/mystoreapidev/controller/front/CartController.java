@@ -1,5 +1,6 @@
 package com.example.mystoreapidev.controller.front;
 
+import com.example.mystoreapidev.VO.CartVO;
 import com.example.mystoreapidev.common.CONSTANT;
 import com.example.mystoreapidev.common.CommonResponse;
 import com.example.mystoreapidev.common.ResponseCode;
@@ -23,7 +24,7 @@ public class CartController {
     private CartService cartService;
 
     @GetMapping("add_cart")
-    public CommonResponse<Object> addCart(
+    public CommonResponse<CartVO> addCart(
             @RequestParam @NotNull(message = "product id can't be null") Integer productId,
             @RequestParam @Range(min=1, message = "product quantity can't be less than 1") Integer quantity,
             HttpSession session){
@@ -32,6 +33,6 @@ public class CartController {
             return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
         }
 
-        return null;
+        return cartService.addCart(login.getId(), productId, quantity);
     }
 }
