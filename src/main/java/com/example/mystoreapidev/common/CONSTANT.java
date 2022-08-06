@@ -15,6 +15,11 @@ public class CONSTANT {
         int ADMIN = 0;
     }
 
+    public interface  CART{
+        int CHECKED = 1;
+        int UNCHRCKED = 0;
+    }
+
     @Getter
     public enum ProductStatus{
         ON_SALE(1, "on_sale"),
