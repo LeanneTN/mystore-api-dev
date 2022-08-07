@@ -40,6 +40,9 @@ public class CartServiceImpl implements CartService {
         if(userId == null){
             return CommonResponse.createForError("user id can't be null");
         }
+        if(productId == null){
+            return CommonResponse.createForError("product id can't be null");
+        }
         if(quantity == null || quantity == 0){
             return CommonResponse.createForError("quantity can't be null or 0");
         }
@@ -130,7 +133,18 @@ public class CartServiceImpl implements CartService {
         return cartVO;
     }
 
+    @Override
     public CommonResponse<CartVO> updateCart(Integer userId, Integer productId, Integer quantity){
+        if(userId == null){
+            return CommonResponse.createForError("user id can't be null");
+        }
+        if(quantity == null || quantity == 0){
+            return CommonResponse.createForError("quantity can't be null or 0");
+        }
+        if(productId == null){
+            return CommonResponse.createForError("product id can't be null");
+        }
+
         QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId).eq("product_id", productId);
         Cart cartItem = cartMapper.selectOne(queryWrapper);
