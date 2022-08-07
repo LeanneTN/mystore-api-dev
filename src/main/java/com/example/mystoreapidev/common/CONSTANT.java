@@ -17,7 +17,7 @@ public class CONSTANT {
 
     public interface  CART{
         int CHECKED = 1;
-        int UNCHRCKED = 0;
+        int UNCHECKED = 0;
     }
 
     @Getter
