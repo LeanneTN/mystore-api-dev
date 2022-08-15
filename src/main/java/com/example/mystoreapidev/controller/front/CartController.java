@@ -20,7 +20,7 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
-    @GetMapping("add_cart")
+    @GetMapping("add")
     public CommonResponse<CartVO> addCart(
             @RequestParam @NotNull(message = "product id can't be null") Integer productId,
             @RequestParam @Range(min=1, message = "product quantity can't be less than 1") Integer quantity,
@@ -33,7 +33,7 @@ public class CartController {
         return cartService.addCart(login.getId(), productId, quantity);
     }
 
-    @PostMapping("update_cart")
+    @PostMapping("update")
     public CommonResponse<CartVO> updateCart(
             @RequestParam @NotNull(message = "product id can't be null") Integer productId,
             @RequestParam @Range(min = 1, message = "product quantity can't be less than 1") Integer quantity,
