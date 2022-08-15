@@ -78,32 +78,39 @@ public class CartServiceImpl implements CartService {
     private CartVO getCartVOAndCheckStock(Integer userId){
         CartVO cartVO = new CartVO();
         List<CartItemVO> cartItemVOList = Lists.newArrayList();
-        //query for the userId's cart info
+
+        //从数据库中查询userId的购物车信息
         QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
         List<Cart> cartItemList = cartMapper.selectList(queryWrapper);
 
         BigDecimal cartTotalPrice = new BigDecimal("0");
         boolean allSelected = true;
-        if (CollectionUtils.isNotEmpty(cartItemList)){
+
+        if(CollectionUtils.isNotEmpty(cartItemList)){
             for(Cart cartItem : cartItemList){
                 CartItemVO cartItemVO = new CartItemVO();
                 cartItemVO.setId(cartItem.getId());
                 cartItemVO.setUserId(cartItem.getUserId());
                 cartItemVO.setProductId(cartItem.getProductId());
+                //cartItemVO.setQuantity(cartItem.getQuantity());
                 cartItemVO.setChecked(cartItem.getChecked());
+                cartItemVO.setCartItemTotalPrice(BigDecimal.valueOf(0));
+
                 Product product = productMapper.selectById(cartItem.getProductId());
-                if(product!= null){
+                if(product != null){
                     cartItemVO.setProductName(product.getName());
                     cartItemVO.setProductSubtitle(product.getSubtitle());
                     cartItemVO.setProductMainImage(product.getMainImage());
                     cartItemVO.setProductPrice(product.getPrice());
                     cartItemVO.setProductStock(product.getStock());
 
-                    if (product.getStock() >= cartItem.getQuantity()){
+                    //处理库存
+                    if(product.getStock() >= cartItem.getQuantity()){
                         cartItemVO.setQuantity(cartItem.getQuantity());
                         cartItemVO.setCheckStock(true);
-                    }else{
+                    }
+                    else{
                         cartItemVO.setQuantity(product.getStock());
                         Cart updateStockCart = new Cart();
                         UpdateWrapper<Cart> updateWrapper = new UpdateWrapper<>();
@@ -111,10 +118,10 @@ public class CartServiceImpl implements CartService {
                         updateWrapper.set("quantity", product.getStock());
                         updateWrapper.set("update_time", LocalDateTime.now());
                         cartMapper.update(updateStockCart, updateWrapper);
-                        cartItemVO.setCheckStock(false); //stock is changed by back-end
+                        cartItemVO.setCheckStock(false);
                     }
-
-                    cartItemVO.setCartItemTotalPrice(BigDecimalUtil.multiply(cartItemVO.getProductPrice().doubleValue(), cartItemVO.getQuantity().doubleValue()));
+                    cartItemVO.setCartItemTotalPrice(
+                            BigDecimalUtil.multiply(cartItemVO.getProductPrice().doubleValue(),cartItemVO.getQuantity().doubleValue()));
                 }
                 cartItemVOList.add(cartItemVO);
 
