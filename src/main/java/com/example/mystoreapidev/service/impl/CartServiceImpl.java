@@ -14,6 +14,7 @@ import com.example.mystoreapidev.persistence.ProductMapper;
 import com.example.mystoreapidev.service.CartService;
 import com.example.mystoreapidev.utils.BigDecimalUtil;
 import com.example.mystoreapidev.utils.ImageServerConfig;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,8 @@ public class CartServiceImpl implements CartService {
 
     }
 
+    //this function plays role in transfer the ordinary values in database into VOs to display in front page
+    //At the same time, it will set the number correctly according to the numbers of products in repository
     private CartVO getCartVOAndCheckStock(Integer userId){
         CartVO cartVO = new CartVO();
         List<CartItemVO> cartItemVOList = Lists.newArrayList();
@@ -170,5 +173,95 @@ public class CartServiceImpl implements CartService {
             return CommonResponse.createForError(ResponseCode.ARGUMENT_ILLEGAL.getCode(), ResponseCode.ARGUMENT_ILLEGAL.getDescription());
         }
     }
-}
 
+    //productIds: "1,2,3..."
+    @Override
+    public CommonResponse<CartVO> deleteCartItems(Integer userId, String productIds){
+        if(userId==null){
+            return CommonResponse.createForError("please login before send request");
+        }
+        if(productIds==null){
+            return CommonResponse.createForError("product ids can't be null");
+        }
+        List<String> productIdStrings = Splitter.on(",").splitToList(productIds);
+        QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
+        for(String productIdString : productIdStrings){
+            int productId = Integer.parseInt(productIdString);
+            queryWrapper.eq("user_id", userId).eq("product_id", productId);
+            cartMapper.delete(queryWrapper);
+            queryWrapper.clear();
+        }
+        CartVO cartVO = this.getCartVOAndCheckStock(userId);
+
+        return CommonResponse.createForSuccess(cartVO);
+    }
+
+    @Override
+    public CommonResponse<CartVO> list(Integer userId){
+        if(userId==null){
+            return CommonResponse.createForError("please login before send request");
+        }
+        CartVO cartVO = this.getCartVOAndCheckStock(userId);
+        return CommonResponse.createForSuccess(cartVO);
+    }
+
+    @Override
+    public CommonResponse<Integer> getCartCount(Integer userId){
+        if(userId==null){
+            return CommonResponse.createForError("please login before send request");
+        }
+        QueryWrapper<Cart> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        List<Cart> cartList = cartMapper.selectList(queryWrapper);
+        int count = 0;
+        for (Cart item : cartList){
+            count += item.getQuantity();
+        }
+        return CommonResponse.createForSuccess(count);
+    }
+
+    @Override
+    public CommonResponse<CartVO> updateAllCheckStatus(Integer userId, Integer checkStatus){
+        if(userId==null){
+            return CommonResponse.createForError("please login before send request");
+        }
+
+        if(checkStatus==null){
+            return CommonResponse.createForError("check status can't be null");
+        }
+
+        Cart cartItem = new Cart();
+        UpdateWrapper<Cart> updateWrapper = new UpdateWrapper<>();
+
+
+        updateWrapper.eq("user_id", userId);
+        updateWrapper.set("checked", checkStatus);
+        updateWrapper.set("update_time", LocalDateTime.now());
+        cartMapper.update(cartItem, updateWrapper);
+
+        CartVO cartVO = this.getCartVOAndCheckStock(userId);
+        return CommonResponse.createForSuccess(cartVO);
+    }
+
+    @Override
+    public CommonResponse<CartVO> updateCheckStatus(Integer userId, Integer productId, Integer checkStatus){
+        if(userId==null){
+            return CommonResponse.createForError("please login before send request");
+        }
+        if (productId==null){
+            return CommonResponse.createForError("product id can't be null");
+        }
+        if(checkStatus==null){
+            return CommonResponse.createForError("check status can't be null");
+        }
+        Cart cartItem = new Cart();
+        UpdateWrapper<Cart> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("user_id", userId);
+        updateWrapper.eq("product_id", productId);
+        updateWrapper.set("checked", checkStatus);
+        updateWrapper.set("update_time", LocalDateTime.now());
+
+        CartVO cartVO = this.getCartVOAndCheckStock(userId);
+        return CommonResponse.createForSuccess(cartVO);
+    }
+}

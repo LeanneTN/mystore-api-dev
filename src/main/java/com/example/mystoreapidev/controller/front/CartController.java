@@ -20,7 +20,7 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
-    @GetMapping("add")
+    @PostMapping("add")
     public CommonResponse<CartVO> addCart(
             @RequestParam @NotNull(message = "product id can't be null") Integer productId,
             @RequestParam @Range(min=1, message = "product quantity can't be less than 1") Integer quantity,
@@ -45,5 +45,64 @@ public class CartController {
         }
 
         return cartService.updateCart(loginUser.getId(), productId, quantity);
+    }
+
+    @PostMapping("delete")
+    public CommonResponse<CartVO> deleteCartItems(
+            @RequestParam @NotNull(message = "product id can't be null") String productId,
+            HttpSession session
+    ){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.deleteCartItems(loginUser.getId(), productId);
+    }
+
+    @GetMapping("list")
+    public CommonResponse<CartVO> list(HttpSession session){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.list(loginUser.getId());
+    }
+
+    @GetMapping("get_cart_count")
+    public CommonResponse<Integer> getCartCount(HttpSession session){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.getCartCount(loginUser.getId());
+    }
+
+    @PostMapping("update_all_check_status")
+    public CommonResponse<CartVO> updateAllCheckStatus(
+            @RequestParam @NotNull(message = "check status can't be null") Integer checkStatus,
+            HttpSession session){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.updateAllCheckStatus(loginUser.getId(), checkStatus);
+    }
+
+    @PostMapping("update_check_status")
+    public CommonResponse<CartVO> updateCheckStatus(
+            @RequestParam @NotNull(message = "product id can't be null") Integer productId,
+            @RequestParam @NotNull(message = "check status can't be null") Integer checkStatus,
+            HttpSession session
+    ){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.updateCheckStatus(loginUser.getId(), productId, checkStatus);
     }
 }
