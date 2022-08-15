@@ -7,13 +7,13 @@ import com.example.mystoreapidev.domain.Address;
 import com.example.mystoreapidev.domain.User;
 import com.example.mystoreapidev.service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @RestController
 @RequestMapping("/address/")
@@ -29,5 +29,43 @@ public class AddressController {
             return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
         }
         return addressService.add(login.getId(), address);
+    }
+
+    @PostMapping("delete")
+    public CommonResponse<Object> delete(@RequestParam @NotNull(message = "address id can't be empty") Integer addressId,
+                                         HttpSession session){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return addressService.delete(login.getId(), addressId);
+    }
+
+    @PostMapping("update")
+    public CommonResponse<Address> update(@RequestBody @Valid Address address, HttpSession session){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return addressService.update(login.getId(), address);
+    }
+
+    @GetMapping("find")
+    public CommonResponse<Address> findById(@RequestParam @NotNull(message = "address id can't be null") Integer addressId,
+                                            HttpSession session){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return addressService.findById(login.getId(), addressId);
+    }
+
+    @GetMapping("list")
+    public CommonResponse<List<Address>> findAll(HttpSession session){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return addressService.findAll(login.getId());
     }
 }
