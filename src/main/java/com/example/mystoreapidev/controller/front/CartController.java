@@ -105,4 +105,32 @@ public class CartController {
 
         return cartService.updateCheckStatus(loginUser.getId(), productId, checkStatus);
     }
+
+    //set specific item check status into checked
+    @GetMapping("set_cart_item_checked")
+    public CommonResponse<CartVO> setCartItemChecked(
+            @RequestParam @NotNull(message = "product id can't be null") Integer productId,
+            HttpSession session
+    ){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.updateCheckStatus(loginUser.getId(), productId, CONSTANT.CART.CHECKED);
+    }
+
+    //set specific item check status into unchecked
+    @GetMapping("set_cart_item_unchecked")
+    public CommonResponse<CartVO> setCartItemUnchecked(
+            @RequestParam @NotNull(message = "product id can't be null") Integer productId,
+            HttpSession session
+    ){
+        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(loginUser==null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+
+        return cartService.updateCheckStatus(loginUser.getId(), productId, CONSTANT.CART.UNCHECKED);
+    }
 }
