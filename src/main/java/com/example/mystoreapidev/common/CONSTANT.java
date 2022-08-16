@@ -35,4 +35,38 @@ public class CONSTANT {
             this.description = description;
         }
     }
+
+    @Getter
+    public enum PayType {
+        ALIPAY(1, "ALIPAY"),
+        WECHAT_PAY(2, "WECHAT_PAY"),
+        OTHER(3, "OTHER");
+
+
+        private final int code;
+        private final String description;
+
+        PayType(int code, String description){
+            this.code = code;
+            this.description = description;
+        }
+    }
+    @Getter
+    public enum OrderStatus{
+        CANCEL(1, "CANCEL"),
+        UNPAID(2, "UNPAID"),
+        PAID(3, "PAID"),
+        SHIPPED(4, "SHIPPED"),
+        SUCCESS(5, "EXCHANGE SUCCESS"),
+        CLOSED(6, "ORDER CLOSED");
+
+
+        private final int code;
+        private final String description;
+
+        OrderStatus(int code, String description){
+            this.code = code;
+            this.description = description;
+        }
+    }
 }
