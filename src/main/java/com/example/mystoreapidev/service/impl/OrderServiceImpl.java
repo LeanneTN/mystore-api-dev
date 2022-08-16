@@ -78,6 +78,24 @@ public class OrderServiceImpl implements OrderService {
             return CommonResponse.createForError("order generate failed");
         }
 
+        //todo:change it into batch insert
+        for(OrderItem orderItem : orderItemList){
+            orderItem.setOrderNo(orderNo);
+            orderItem.setCreateTime(LocalDateTime.now());
+            orderItem.setUpdateTime(LocalDateTime.now());
+            orderItemMapper.insert(orderItem);
+        }
+
+        for(OrderItem orderItem : orderItemList){
+            Product product = productMapper.selectById(orderItem.getProductId());
+            product.setStock(product.getStock() - orderItem.getQuantity());
+            productMapper.updateById(product);
+        }
+
+        for(Cart cartItem : cartList){
+            cartMapper.deleteById(cartItem.getId());
+        }
+
         return null;
     }
 

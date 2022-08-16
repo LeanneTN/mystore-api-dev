@@ -17,7 +17,7 @@ public class OrderItem {
     @TableField("user_id")
     private Integer userId;
     @TableField("order_no")
-    private Integer orderNo;
+    private Long orderNo;
     @TableField("product_id")
     private Integer productId;
     @TableField("product_name")
