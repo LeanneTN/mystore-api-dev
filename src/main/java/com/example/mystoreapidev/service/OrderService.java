@@ -8,4 +8,6 @@ public interface OrderService {
     CommonResponse<OrderVO> create(Integer userId, Integer addressId);
 
     CommonResponse<OrderCartItemVO> getCheckedCartItemList(Integer userId);
+
+    CommonResponse<OrderVO> getOrderDetail(Integer userId, Long orderNo);
 }

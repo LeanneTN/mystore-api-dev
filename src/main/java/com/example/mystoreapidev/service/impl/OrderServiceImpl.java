@@ -192,6 +192,27 @@ public class OrderServiceImpl implements OrderService {
         return CommonResponse.createForSuccess(orderCartItemVO);
     }
 
+    @Override
+    public CommonResponse<OrderVO> getOrderDetail(Integer userId, Long orderNo){
+        OrderVO orderVO = null;
+
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+
+        Order order = orderMapper.selectOne(queryWrapper);
+
+        if(order == null)
+            return CommonResponse.createForError("order is not exists");
+
+        QueryWrapper<OrderItem> queryWrapper1 = new QueryWrapper<>();
+        queryWrapper1.eq("user_id", userId).eq("order_no", orderNo);
+        List<OrderItem> orderItemList = orderItemMapper.selectList(queryWrapper1);
+
+        orderVO = generateOrderVO(order, orderItemList);
+
+        return CommonResponse.createForSuccess(orderVO);
+    }
+
     private Long generateOrderNo(){
         return System.currentTimeMillis() + new Random().nextInt(1000);
     }

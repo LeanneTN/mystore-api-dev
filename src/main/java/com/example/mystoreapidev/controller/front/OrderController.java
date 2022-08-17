@@ -35,6 +35,18 @@ public class OrderController {
         if(login == null){
             return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
         }
-        return null;
+        return orderService.getCheckedCartItemList(login.getId());
+    }
+
+    @GetMapping("detail")
+    public CommonResponse<OrderVO> getOrderDetail(
+            @RequestParam @NotNull(message = "order no can't be null") Long orderNo,
+            HttpSession session
+    ){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return orderService.getOrderDetail(login.getId(), orderNo);
     }
 }
