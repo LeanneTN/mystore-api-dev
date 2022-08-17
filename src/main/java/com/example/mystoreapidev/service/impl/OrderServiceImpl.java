@@ -1,6 +1,7 @@
 package com.example.mystoreapidev.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.mystoreapidev.VO.OrderCartItemVO;
 import com.example.mystoreapidev.VO.OrderItemVO;
 import com.example.mystoreapidev.VO.OrderVO;
 import com.example.mystoreapidev.common.CONSTANT;
@@ -112,6 +113,10 @@ public class OrderServiceImpl implements OrderService {
 
         OrderVO orderVO = generateOrderVO(order, orderItemList);
 
+        if(orderVO == null){
+            return CommonResponse.createForError("address id is wrong");
+        }
+
         return CommonResponse.createForSuccess(orderVO);
     }
 
@@ -150,6 +155,43 @@ public class OrderServiceImpl implements OrderService {
         return CommonResponse.createForSuccess(orderItemList);
     }
 
+    @Override
+    public CommonResponse<OrderCartItemVO> getCheckedCartItemList(Integer userId){
+        OrderCartItemVO orderCartItemVO = new OrderCartItemVO();
+
+        //1. get selected product from cart
+        QueryWrapper<Cart> cartQueryWrapper = new QueryWrapper<>();
+        cartQueryWrapper.eq("user_id", userId);
+        cartQueryWrapper.eq("checked", CONSTANT.CART.CHECKED);
+        List<Cart> cartItemList = cartMapper.selectList(cartQueryWrapper);
+
+        if(CollectionUtils.isEmpty(cartItemList)){
+            return CommonResponse.createForError("购物车为空");
+        }
+
+        //2. put cartItem into orderItem
+        CommonResponse cartItemToOrderItemResult = this.cartItemToOrderItem(cartItemList);
+        if(!cartItemToOrderItemResult.isSuccess()){
+            return cartItemToOrderItemResult;
+        }
+
+        List<OrderItem> orderItemList = (List<OrderItem>)cartItemToOrderItemResult.getData();
+
+        //3. total price and OrderItem->OrderItemVO
+        List<OrderItemVO> orderItemVOList = Lists.newArrayList();
+        BigDecimal paymentPrice = new BigDecimal("0");
+        for(OrderItem orderItem : orderItemList){
+            paymentPrice = BigDecimalUtil.add(paymentPrice.doubleValue(),orderItem.getTotalPrice().doubleValue());
+            orderItemVOList.add(orderItemToOrderItemVO(orderItem));
+        }
+
+        orderCartItemVO.setOrderItemVOList(orderItemVOList);
+        orderCartItemVO.setPaymentPrice(paymentPrice);
+        orderCartItemVO.setImageServer(imageServerConfig.getUrl());
+
+        return CommonResponse.createForSuccess(orderCartItemVO);
+    }
+
     private Long generateOrderNo(){
         return System.currentTimeMillis() + new Random().nextInt(1000);
     }
@@ -174,6 +216,8 @@ public class OrderServiceImpl implements OrderService {
 
         //todo: invoke addressService.getById()  it shouldn't invoke addressMapper and addressService at same time
         Address address = addressMapper.selectById(order.getAddressId());
+        if(address == null)
+            return null;
         orderVO.setAddressVO(addressService.addressToAddressVO(address));
 
         List<OrderItemVO> orderItemVOList = Lists.newArrayList();
