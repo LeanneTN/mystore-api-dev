@@ -1,15 +1,17 @@
 package com.example.mystoreapidev.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.mystoreapidev.VO.OrderItemVO;
+import com.example.mystoreapidev.VO.OrderVO;
 import com.example.mystoreapidev.common.CONSTANT;
 import com.example.mystoreapidev.common.CommonResponse;
-import com.example.mystoreapidev.domain.Cart;
-import com.example.mystoreapidev.domain.Order;
-import com.example.mystoreapidev.domain.OrderItem;
-import com.example.mystoreapidev.domain.Product;
+import com.example.mystoreapidev.domain.*;
 import com.example.mystoreapidev.persistence.*;
+import com.example.mystoreapidev.service.AddressService;
 import com.example.mystoreapidev.service.OrderService;
 import com.example.mystoreapidev.utils.BigDecimalUtil;
+import com.example.mystoreapidev.utils.DateTimeFormatterUtil;
+import com.example.mystoreapidev.utils.ImageServerConfig;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,14 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ProductMapper productMapper;
 
-    public CommonResponse<Object> create(Integer userId, Integer addressId){
+    @Autowired
+    private AddressService addressService;
+
+    @Autowired
+    private ImageServerConfig imageServerConfig;
+
+    @Override
+    public CommonResponse<OrderVO> create(Integer userId, Integer addressId){
         //get items which are checked in cart
         QueryWrapper<Cart> cartQueryWrapper = new QueryWrapper<>();
         cartQueryWrapper.eq("user_id", userId).eq("checked", CONSTANT.CART.CHECKED);
@@ -48,10 +57,15 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //put cart item into order item
-        CommonResponse<Object> cartItemToOrderItemResult = cartItemToOrderItem(cartList);
+//        CommonResponse<OrderVO> cartItemToOrderItemResult = cartItemToOrderItem(cartList);
+//
+//        if(cartItemToOrderItemResult.isSuccess())
+//            return cartItemToOrderItemResult;
 
-        if(cartItemToOrderItemResult.isSuccess())
+        CommonResponse cartItemToOrderItemResult = this.cartItemToOrderItem(cartList);
+        if(!cartItemToOrderItemResult.isSuccess()){
             return cartItemToOrderItemResult;
+        }
 
         List<OrderItem> orderItemList = (List<OrderItem>) cartItemToOrderItemResult.getData();
 
@@ -96,7 +110,9 @@ public class OrderServiceImpl implements OrderService {
             cartMapper.deleteById(cartItem.getId());
         }
 
-        return null;
+        OrderVO orderVO = generateOrderVO(order, orderItemList);
+
+        return CommonResponse.createForSuccess(orderVO);
     }
 
     private CommonResponse<Object> cartItemToOrderItem(List<Cart> cartItemList){
@@ -136,5 +152,50 @@ public class OrderServiceImpl implements OrderService {
 
     private Long generateOrderNo(){
         return System.currentTimeMillis() + new Random().nextInt(1000);
+    }
+
+    private OrderVO generateOrderVO(Order order, List<OrderItem> orderItemList){
+        OrderVO orderVO = new OrderVO();
+
+        orderVO.setId(order.getId());
+        orderVO.setOrderNo(order.getOrderNo());
+        orderVO.setUserId(order.getUserId());
+        orderVO.setPaymentPrice(order.getPaymentPrice());
+        orderVO.setPaymentType(order.getPaymentType());
+        orderVO.setPostage(order.getPostage());
+        orderVO.setStatus(order.getStatus());
+
+        orderVO.setPaymentTime(DateTimeFormatterUtil.format(order.getPaymentTime()));
+        orderVO.setSendTime(DateTimeFormatterUtil.format(order.getSendTime()));
+        orderVO.setEndTime(DateTimeFormatterUtil.format(order.getEndTime()));
+        orderVO.setCloseTime(DateTimeFormatterUtil.format(order.getCloseTime()));
+        orderVO.setCreateTime(DateTimeFormatterUtil.format(order.getCreateTime()));
+        orderVO.setUpdateTime(DateTimeFormatterUtil.format(order.getUpdateTime()));
+
+        //todo: invoke addressService.getById()  it shouldn't invoke addressMapper and addressService at same time
+        Address address = addressMapper.selectById(order.getAddressId());
+        orderVO.setAddressVO(addressService.addressToAddressVO(address));
+
+        List<OrderItemVO> orderItemVOList = Lists.newArrayList();
+
+        for(OrderItem orderItem : orderItemList){
+            orderItemVOList.add(orderItemToOrderItemVO(orderItem));
+        }
+        orderVO.setOrderItemVOList(orderItemVOList);
+        orderVO.setImageServer(imageServerConfig.getUrl());
+
+        return orderVO;
+    }
+
+    private OrderItemVO orderItemToOrderItemVO(OrderItem orderItem){
+        OrderItemVO orderItemVO = new OrderItemVO();
+        orderItemVO.setId(orderItem.getId());
+        orderItemVO.setProductId(orderItem.getProductId());
+        orderItemVO.setProductName(orderItem.getProductName());
+        orderItemVO.setProductImage(orderItem.getProductImage());
+        orderItemVO.setCurrentPrice(orderItem.getCurrentPrice());
+        orderItemVO.setQuantity(orderItem.getQuantity());
+        orderItemVO.setTotalPrice(orderItem.getTotalPrice());
+        return orderItemVO;
     }
 }

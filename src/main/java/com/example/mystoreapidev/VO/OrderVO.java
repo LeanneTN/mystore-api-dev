@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class OrderVO {
@@ -18,14 +19,19 @@ public class OrderVO {
     private BigDecimal paymentPrice;
     private Integer paymentType;
     private Integer postage;
+
     private Integer status;
 
-    private LocalDateTime paymentTime;
-    private LocalDateTime sendTime;
-    private LocalDateTime endTime;
-    private LocalDateTime closeTime;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private String paymentTime;
+    private String sendTime;
+    private String endTime;
+    private String closeTime;
+    private String createTime;
+    private String updateTime;
 
-    private Address address;
+    private AddressVO addressVO;
+
+    private List<OrderItemVO> orderItemVOList;
+
+    private String imageServer;
 }
