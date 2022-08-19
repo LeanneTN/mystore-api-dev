@@ -1,5 +1,6 @@
 package com.example.mystoreapidev.controller.front;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.mystoreapidev.VO.OrderCartItemVO;
 import com.example.mystoreapidev.VO.OrderVO;
 import com.example.mystoreapidev.common.CONSTANT;
@@ -48,5 +49,30 @@ public class OrderController {
             return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
         }
         return orderService.getOrderDetail(login.getId(), orderNo);
+    }
+
+    @GetMapping("list")
+    public CommonResponse<Page<OrderVO>> getOrderList(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "2") int pageSize,
+            HttpSession session
+    ){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return orderService.getOrderList(login.getId(), pageNum, pageSize);
+    }
+
+    @GetMapping("cancel")
+    public CommonResponse<String> cancel(
+            @RequestParam @NotNull(message = "order no can't be null") Long orderNo,
+            HttpSession session
+    ){
+        User login =(User) session.getAttribute(CONSTANT.LOGIN_USER);
+        if(login == null){
+            return CommonResponse.createForError(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDescription());
+        }
+        return orderService.cancelOrder(login.getId(), orderNo);
     }
 }

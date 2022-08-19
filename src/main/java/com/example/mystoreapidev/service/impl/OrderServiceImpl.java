@@ -1,6 +1,7 @@
 package com.example.mystoreapidev.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.mystoreapidev.VO.OrderCartItemVO;
 import com.example.mystoreapidev.VO.OrderItemVO;
 import com.example.mystoreapidev.VO.OrderVO;
@@ -194,6 +195,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public CommonResponse<OrderVO> getOrderDetail(Integer userId, Long orderNo){
+        if(userId == null){
+            return CommonResponse.createForError("user id can't be null");
+        }
+
+        if(orderNo == null){
+            return CommonResponse.createForError("order no can't be null");
+        }
         OrderVO orderVO = null;
 
         QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
@@ -211,6 +219,61 @@ public class OrderServiceImpl implements OrderService {
         orderVO = generateOrderVO(order, orderItemList);
 
         return CommonResponse.createForSuccess(orderVO);
+    }
+
+    @Override
+    public CommonResponse<Page<OrderVO>> getOrderList(Integer userId, int pageNum, int pageSize) {
+        Page<Order> result = new Page<>();
+        result.setCurrent(pageNum);
+        result.setSize(pageSize);
+
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+
+        result = orderMapper.selectPage(result, queryWrapper);
+
+        List<Order> orderList = result.getRecords();
+
+        List<OrderVO> orderVOList = Lists.newArrayList();
+
+        // according to selected order to get the specific items in each order
+        for(Order order : orderList){
+            QueryWrapper<OrderItem> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.eq("user_id", userId).eq("order_no", order.getOrderNo());
+
+            List<OrderItem> orderItemList = orderItemMapper.selectList(queryWrapper1);
+
+            OrderVO orderVO = generateOrderVO(order, orderItemList);
+
+            orderVOList.add(orderVO);
+        }
+
+        Page<OrderVO> newResult = new Page<>();
+        newResult.setCurrent(result.getCurrent());
+        newResult.setSize(result.getSize());
+        newResult.setTotal(result.getTotal());
+        newResult.setRecords(orderVOList);
+        return CommonResponse.createForSuccess(newResult);
+    }
+
+    @Override
+    public CommonResponse<String> cancelOrder(Integer userId, Long orderNo) {
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId).eq("order_no", orderNo);
+        Order order = orderMapper.selectOne(queryWrapper);
+
+        if(order == null){
+            return CommonResponse.createForError("order is not exists");
+        }
+        if(order.getStatus() != CONSTANT.OrderStatus.UNPAID.getCode()){
+            return CommonResponse.createForError("order is not under the state of waiting for paid, can't be cancel");
+        }
+        order.setStatus(CONSTANT.OrderStatus.CANCEL.getCode());
+        int result = orderMapper.updateById(order);
+        if(result != 1){
+            return CommonResponse.createForError("cancel order failed");
+        }
+        return CommonResponse.createForSuccess();
     }
 
     private Long generateOrderNo(){
