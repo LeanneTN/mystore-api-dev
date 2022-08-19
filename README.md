@@ -20,6 +20,16 @@ API documents have been released in WIKI. It was seperated by categories and fun
 - Caffeine
 - Mybatis Plus
 
+## Packages not included in Maven
+There are few packages which aren't using maven to manage
+### Alipay Third party dependency
+alipay-sdk-java-3.3.0.jar
+
+alipay-sdk-java-3.3.0-source.jar
+
+alipay-trade-sdk-20161215.jar
+
+alipay-trade-sdk-20161215-source.jar
 
 ## Coding Style
 In this project, my coding style is based on restful API and 
