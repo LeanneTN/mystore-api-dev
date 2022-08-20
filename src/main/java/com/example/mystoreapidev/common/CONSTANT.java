@@ -69,4 +69,16 @@ public class CONSTANT {
             this.description = description;
         }
     }
+
+    public interface AlipayTradeStatus{
+        String WAIT_BUYER_PAY = "WAIT_BUYER_PAY";
+        String TRADE_CLOSED = "TRADE_CLOSED";
+        String TRADE_SUCCESS = "TRADE_SUCCESS";
+        String TRADE_FINISHED = "TRADE_FINISHED";
+    }
+
+    public interface AlipayCallbackResponse{
+        String RESPONSE_SUCCESS = "success";
+        String RESPONSE_FAILED = "failed";
+    }
 }

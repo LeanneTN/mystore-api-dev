@@ -11,12 +11,16 @@ import com.alipay.demo.trade.service.AlipayTradeService;
 import com.alipay.demo.trade.service.impl.AlipayTradeServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.mystoreapidev.VO.QRCodeVO;
+import com.example.mystoreapidev.common.CONSTANT;
 import com.example.mystoreapidev.common.CommonResponse;
 import com.example.mystoreapidev.domain.Order;
 import com.example.mystoreapidev.domain.OrderItem;
+import com.example.mystoreapidev.domain.PayInfo;
 import com.example.mystoreapidev.persistence.OrderItemMapper;
 import com.example.mystoreapidev.persistence.OrderMapper;
+import com.example.mystoreapidev.persistence.PayInfoMapper;
 import com.example.mystoreapidev.service.MyAlipayService;
+import com.example.mystoreapidev.utils.DateTimeFormatterUtil;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -31,6 +35,7 @@ import org.springframework.stereotype.Service;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -45,6 +50,9 @@ public class MyAlipayServiceImpl implements MyAlipayService {
 
     @Autowired
     private OrderItemMapper orderItemMapper;
+
+    @Autowired
+    private PayInfoMapper payInfoMapper;
 
     @Override
     public CommonResponse<QRCodeVO> getQRCode(Integer userId, Long orderNo){
@@ -114,7 +122,7 @@ public class MyAlipayServiceImpl implements MyAlipayService {
                 .setUndiscountableAmount(undiscountableAmount).setSellerId(sellerId).setBody(body)
                 .setOperatorId(operatorId).setStoreId(storeId).setExtendParams(extendParams)
                 .setTimeoutExpress(timeoutExpress)
-                //                .setNotifyUrl("http://www.test-notify-url.com")//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
+                .setNotifyUrl("https://5714a17e18.zicp.fun/pay/callback")//支付宝服务器主动通知商户服务器里指定的页面http路径,根据需要设置
                 .setGoodsDetailList(goodsDetailList);
 
         Configs.init("zfbinfo.properties");
@@ -157,6 +165,37 @@ public class MyAlipayServiceImpl implements MyAlipayService {
                 log.error("不支持的交易状态，交易返回异常!!!");
                 return CommonResponse.createForError("not a supported trade state");
         }
+    }
+
+    @Override
+    public CommonResponse<Object> alipayCallback(Map<String, String> params){
+        Long orderNo = Long.parseLong(params.get("out_trade_no"));
+        String tradeNo = params.get("trade_no");
+        String tradeStatus = params.get("trade_status");
+
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+        Order order = orderMapper.selectOne(queryWrapper);
+
+        if(order.getStatus() >= CONSTANT.OrderStatus.PAID.getCode()){
+            return CommonResponse.createForSuccess();
+        }
+        if(tradeStatus.equals(CONSTANT.AlipayTradeStatus.TRADE_SUCCESS)){
+            order.setStatus(CONSTANT.OrderStatus.PAID.getCode());
+            order.setPaymentTime(DateTimeFormatterUtil.parseGMT(params.get("gmt_payment")));
+        }
+
+        PayInfo payInfo = new PayInfo();
+        payInfo.setUserId(order.getUserId());
+        payInfo.setOrderNo(order.getOrderNo());
+        payInfo.setPaymentType(CONSTANT.PayType.ALIPAY.getCode());
+        payInfo.setTradeNo(tradeNo);
+        payInfo.setTradeStatus(tradeStatus);
+        payInfo.setCreateTime(LocalDateTime.now());
+        payInfo.setUpdateTime(LocalDateTime.now());
+        payInfoMapper.insert(payInfo);
+
+        return CommonResponse.createForSuccess();
     }
 
     private void dumpResponse(AlipayResponse response) {
