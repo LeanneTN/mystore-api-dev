@@ -45,6 +45,8 @@ import java.util.Map;
 @Slf4j
 public class MyAlipayServiceImpl implements MyAlipayService {
 
+    //todo: rewrite ali pay interface without using third party packages
+
     @Autowired
     private OrderMapper orderMapper;
 
