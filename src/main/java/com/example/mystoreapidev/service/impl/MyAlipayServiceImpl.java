@@ -180,21 +180,22 @@ public class MyAlipayServiceImpl implements MyAlipayService {
         if(order.getStatus() >= CONSTANT.OrderStatus.PAID.getCode()){
             return CommonResponse.createForSuccess();
         }
+
         if(tradeStatus.equals(CONSTANT.AlipayTradeStatus.TRADE_SUCCESS)){
             order.setStatus(CONSTANT.OrderStatus.PAID.getCode());
             order.setPaymentTime(DateTimeFormatterUtil.parseGMT(params.get("gmt_payment")));
+            orderMapper.updateById(order);
         }
 
         PayInfo payInfo = new PayInfo();
         payInfo.setUserId(order.getUserId());
-        payInfo.setOrderNo(order.getOrderNo());
+        payInfo.setOrderNo(orderNo);
         payInfo.setPaymentType(CONSTANT.PayType.ALIPAY.getCode());
         payInfo.setTradeNo(tradeNo);
         payInfo.setTradeStatus(tradeStatus);
         payInfo.setCreateTime(LocalDateTime.now());
         payInfo.setUpdateTime(LocalDateTime.now());
         payInfoMapper.insert(payInfo);
-
         return CommonResponse.createForSuccess();
     }
 

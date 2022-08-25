@@ -41,33 +41,37 @@ public class AlipayController {
 
     @PostMapping("callback")
     public Object callback(HttpServletRequest request){
-        Map<String, String[]> requestParams = request.getParameterMap();
+        Map<String ,String> params = Maps.newHashMap();
 
-        Map<String, String> params = Maps.newHashMap();
-        //Map<String, String[]> -> Map<String, String>
-        for(String paramName: requestParams.keySet()){
-            String [] values = requestParams.get(paramName);
+        Map<String, String[]> requestParams = request.getParameterMap();
+        for (String paramName : requestParams.keySet()) {
+            String[] values = requestParams.get(paramName);
             String paramValue = "";
-            for(int i = 0; i < values.length; i++){
-                paramValue = (i < values.length-1) ? (values[i] + ","):(paramValue + values[i]);
+            for (int i = 0; i < values.length; i++) {
+                paramValue = (i < values.length - 1) ? (values[i] + ",") : (paramValue + values[i]);
             }
             params.put(paramName, paramValue);
         }
+        log.info("alipay回调......\n trade_no:{}\n out_trade_no:{}\n trade_status:{}",params.get("trade_no"),params.get("out_trade_no"),params.get("trade_status"));
+
+        //signature check
 
         params.remove("sign_type");
         try {
-            boolean alipayRSACheck = AlipaySignature.rsaCheckV2(params, Configs.getPublicKey(), "utf-8", Configs.getSignType());
+            boolean alipayRSACheck = AlipaySignature.rsaCheckV2(params, Configs.getAlipayPublicKey(),"utf-8",Configs.getSignType());
             if(!alipayRSACheck){
-                return CommonResponse.createForError("invalid request");
+                return CommonResponse.createForError("非法请求......");
             }
+
         }catch (AlipayApiException e){
-            log.error("alipay signature check error",e);
+            log.error("alipay验签异常......",e);
         }
 
         CommonResponse result = myAlipayService.alipayCallback(params);
-
-        if(result.isSuccess())
+        if(result.isSuccess()){
             return CONSTANT.AlipayCallbackResponse.RESPONSE_SUCCESS;
+        }
+
         return CONSTANT.AlipayCallbackResponse.RESPONSE_FAILED;
     }
 }
